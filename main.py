@@ -1,10 +1,11 @@
 # coding:utf-8
 
-import datetime
 import codecs
-import requests
 import os
-import time
+import shutil
+from datetime import datetime
+
+import requests
 from pyquery import PyQuery as pq
 
 
@@ -52,8 +53,28 @@ def scrape(language, filename):
             f.write(u"* [{title}]({url}):{description}\n".format(title=title, url=url, description=description))
 
 
+def move_files_to_current_month_folder():
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    current_day = datetime.now().day
+    current_month_folder = f"{current_year}/{current_month}"
+
+    # Check if today is the last day of the month
+    if (current_month in [1, 3, 5, 7, 8, 10, 12] and current_day == 31) or \
+            (current_month in [4, 6, 9, 11] and current_day == 30) or \
+            (current_month == 2 and current_day == 28):
+        if not os.path.exists(current_month_folder):
+            os.makedirs(current_month_folder)
+
+        for file in os.listdir():
+            if file.endswith(".md") and file.startswith(f"{current_year}-{str(current_month).zfill(2)}"):
+                shutil.move(file, current_month_folder)
+    else:
+        print("Today is not the last day of the month. Files will not be moved.")
+
+
 def job():
-    str_date = datetime.datetime.now().strftime('%Y-%m-%d')
+    str_date = datetime.now().strftime('%Y-%m-%d')
     filename = '{date}.md'.format(date=str_date)
 
     # create markdown file
@@ -63,6 +84,9 @@ def job():
     scrape('python', filename)
     scrape('java', filename)
     scrape('go', filename)
+
+    # archive
+    move_files_to_current_month_folder()
 
 
 if __name__ == '__main__':

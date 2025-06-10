@@ -163,3 +163,5 @@ log/
 
 # Installer logs
 *.out
+
+.DS_Store
